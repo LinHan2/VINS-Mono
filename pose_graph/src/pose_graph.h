@@ -1,5 +1,6 @@
 #pragma once
-
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
 #include <thread>
 #include <mutex>
 #include <opencv2/opencv.hpp>
@@ -108,10 +109,16 @@ class AngleLocalParameterization {
     return true;
   }
 
+#if CERES_VERSION_MAJOR >= 2
+  static ceres::Manifold* Create() {
+    return (new ceres::AutoDiffManifold<AngleLocalParameterization, 1, 1>);
+  }
+#else
   static ceres::LocalParameterization* Create() {
     return (new ceres::AutoDiffLocalParameterization<AngleLocalParameterization,
                                                      1, 1>);
   }
+#endif
 };
 
 template <typename T> 

@@ -1,5 +1,15 @@
 #include "estimator.h"
 
+// Ceres compatibility macros
+#if CERES_VERSION_MAJOR >= 2
+#define AddParameterBlockWithParameterization(block, size, parameterization) \
+    problem.AddParameterBlock(block, size); \
+    if (parameterization) problem.SetManifold(block, parameterization)
+#else
+#define AddParameterBlockWithParameterization(block, size, parameterization) \
+    problem.AddParameterBlock(block, size, parameterization)
+#endif
+
 Estimator::Estimator(): f_manager{Rs}
 {
     ROS_INFO("init begins");
@@ -675,14 +685,26 @@ void Estimator::optimization()
     loss_function = new ceres::CauchyLoss(1.0);
     for (int i = 0; i < WINDOW_SIZE + 1; i++)
     {
+#if CERES_VERSION_MAJOR >= 2
+        ceres::Manifold *local_parameterization = new PoseLocalParameterization();
+        problem.AddParameterBlock(para_Pose[i], SIZE_POSE);
+        problem.SetManifold(para_Pose[i], local_parameterization);
+#else
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Pose[i], SIZE_POSE, local_parameterization);
+#endif
         problem.AddParameterBlock(para_SpeedBias[i], SIZE_SPEEDBIAS);
     }
     for (int i = 0; i < NUM_OF_CAM; i++)
     {
+#if CERES_VERSION_MAJOR >= 2
+        ceres::Manifold *local_parameterization = new PoseLocalParameterization();
+        problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE);
+        problem.SetManifold(para_Ex_Pose[i], local_parameterization);
+#else
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE, local_parameterization);
+#endif
         if (!ESTIMATE_EXTRINSIC)
         {
             ROS_DEBUG("fix extinsic param");
@@ -769,8 +791,14 @@ void Estimator::optimization()
     if(relocalization_info)
     {
         //printf("set relocalization factor! \n");
+#if CERES_VERSION_MAJOR >= 2
+        ceres::Manifold *local_parameterization = new PoseLocalParameterization();
+        problem.AddParameterBlock(relo_Pose, SIZE_POSE);
+        problem.SetManifold(relo_Pose, local_parameterization);
+#else
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(relo_Pose, SIZE_POSE, local_parameterization);
+#endif
         int retrive_feature_index = 0;
         int feature_index = -1;
         for (auto &it_per_id : f_manager.feature)

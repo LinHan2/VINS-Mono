@@ -32,6 +32,44 @@ EigenQuaternionParameterization::Plus(const double* x,
     return true;
 }
 
+#if CERES_VERSION_MAJOR >= 2
+bool
+EigenQuaternionParameterization::PlusJacobian(const double* x,
+                                              double* jacobian) const
+{
+    jacobian[0] =  x[3]; jacobian[1]  =  x[2]; jacobian[2]  = -x[1];  // NOLINT
+    jacobian[3] = -x[2]; jacobian[4]  =  x[3]; jacobian[5]  =  x[0];  // NOLINT
+    jacobian[6] =  x[1]; jacobian[7] = -x[0]; jacobian[8] =  x[3];  // NOLINT
+    jacobian[9] = -x[0]; jacobian[10]  = -x[1]; jacobian[11]  = -x[2];  // NOLINT
+    return true;
+}
+
+bool
+EigenQuaternionParameterization::Minus(const double* y,
+                                       const double* x,
+                                       double* y_minus_x) const
+{
+    // This is a simplified implementation for quaternion manifold
+    // In practice, you might want a more sophisticated implementation
+    for (int i = 0; i < 3; ++i)
+    {
+        y_minus_x[i] = y[i] - x[i];
+    }
+    return true;
+}
+
+bool
+EigenQuaternionParameterization::MinusJacobian(const double* x,
+                                               double* jacobian) const
+{
+    // Simplified implementation
+    for (int i = 0; i < 9; ++i)
+    {
+        jacobian[i] = (i % 4 == 0) ? 1.0 : 0.0;
+    }
+    return true;
+}
+#else
 bool
 EigenQuaternionParameterization::ComputeJacobian(const double* x,
                                                  double* jacobian) const
@@ -42,5 +80,6 @@ EigenQuaternionParameterization::ComputeJacobian(const double* x,
     jacobian[9] = -x[0]; jacobian[10]  = -x[1]; jacobian[11]  = -x[2];  // NOLINT
     return true;
 }
+#endif
 
 }

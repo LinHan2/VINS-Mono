@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(feature_tracker)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++14")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(catkin REQUIRED COMPONENTS
@@ -13,7 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
     camera_model
     )
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4.6.0 EXACT REQUIRED PATHS /usr/local NO_DEFAULT_PATH)
+message(STATUS "Found OpenCV: ${OpenCV_VERSION} in ${OpenCV_DIR}")
 
 catkin_package()
 
